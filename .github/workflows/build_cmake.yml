@@ -119,6 +119,7 @@ jobs:
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       - name: Archive build artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: msvc-x86_64
@@ -198,6 +199,7 @@ jobs:
       - name: Build
         run: cmake --build ${{github.workspace}}/build
       - name: Archive build artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: linux-${{matrix.env}}
