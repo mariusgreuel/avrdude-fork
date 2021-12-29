@@ -95,7 +95,8 @@ jobs:
           name: macos-x86_64
           path: |
             ${{github.workspace}}/build/*
-  msvc:
+
+  msvc-x86_64:
     runs-on: windows-latest
     defaults:
       run:
@@ -114,15 +115,17 @@ jobs:
           -D CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="/DEBUG /INCREMENTAL:NO /LTCG /OPT:REF /OPT:ICF"
           -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           -D USE_EXTERNAL=1
-          -B ../build
+          -B ${{github.workspace}}/build
       - name: Build
-        run: cmake --build ../build --config ${{env.BUILD_TYPE}}
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       - name: Archive build artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: msvc-x64
+          name: msvc-x86_64
           path: |
             ${{github.workspace}}/build/*
+            !${{github.workspace}}/build/_deps/*
+
   mingw:
     runs-on: windows-latest
     defaults:
@@ -163,5 +166,40 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: mingw-${{matrix.env}}
+          path: |
+            ${{github.workspace}}/build/*
+
+  cross:
+    runs-on: ubuntu-latest
+    container: debian:11
+    defaults:
+      run:
+        working-directory: ./src
+    strategy:
+      matrix:
+        include:
+          - { arch: i386, env: i686, compiler: i686-linux-gnu-gcc }
+          - { arch: armhf, env: armhf, compiler: arm-linux-gnueabihf-gcc }
+          - { arch: arm64, env: arm64, compiler: aarch64-linux-gnu-gcc }
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install prerequisites
+        run: |
+          dpkg --add-architecture ${{matrix.arch}}
+          apt-get update
+          apt-get install -y cmake flex bison crossbuild-essential-${{matrix.arch}} libusb-dev:${{matrix.arch}}
+      - name: Configure
+        run: >-
+          cmake
+          -D DEBUG_CMAKE=1
+          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -D CMAKE_C_COMPILER=${{matrix.compiler}}
+          -B ${{github.workspace}}/build
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux-${{matrix.env}}
           path: |
             ${{github.workspace}}/build/*
