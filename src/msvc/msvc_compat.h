@@ -28,6 +28,7 @@
 #pragma warning(disable : 4267) // warning C4267: conversion from '...' to '...', possible loss of data
 #pragma warning(disable : 5105) // warning C5105: macro expansion producing 'defined' has undefined behavior
 
+#pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "hid.lib")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "setupapi.lib")
